@@ -1,0 +1,1 @@
+# cajviewer-fuzz-data
