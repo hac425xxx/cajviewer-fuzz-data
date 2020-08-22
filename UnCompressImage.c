@@ -105,7 +105,10 @@ void my_init(void)
     struct link_map *lm = (struct link_map *)handle;
     printf("image:%lx\n", lm->l_addr);
 
-    unsigned long image_base = lm->l_addr;
+    char* image_base = (char*)lm->l_addr;
+
+    printf("export AFL_CODE_START=%p\n", image_base + 0x3D4880);
+    printf("export AFL_CODE_END=%p\n", image_base + 0x90984F);
 
     p_UnCompressImage = dlsym(handle, "_Z15UnCompressImagePcjjii");
     p_CAJFILE_CreateErrorObject = dlsym(handle, "CAJFILE_CreateErrorObject");
@@ -121,21 +124,25 @@ void my_init(void)
         return;
     }
     
-
-    printf("p_UnCompressImage:%p\n", p_UnCompressImage);
-
     plt_hook_function("libreaderex_x64.so", "__assert_fail", my_assert_fail);
     plt_hook_function("libreaderex_x64.so", "__cxa_throw", my_cxa_throw);
     
     
-
 }
 
 int main(int argc, char **argv)
 {
-    printf("main:%p\n", main);
+    printf("export AFL_ENTRYPOINT=%p\n", main);
     int f_sz = 0;
     char* buffer = read_to_buf(argv[1], &f_sz);
-    char *ret = p_UnCompressImage(buffer, 4, f_sz, 100, 100);
+
+    if(f_sz < 2)
+    {
+        return 0;
+    }
+
+    unsigned int type = buffer[0] % 5;
+
+    char *ret = p_UnCompressImage(buffer + 1, type, f_sz - 1, 100, 100);
     return 0;
 }

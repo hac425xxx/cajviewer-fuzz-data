@@ -13,7 +13,7 @@
 void my_init(void) __attribute__((constructor)); //告诉gcc把这个函数扔到init section
 
 int heap_op_plt_hook(char* module_name);
-
+void plt_hook_function(char* module_name, char* func_name, void* new_func);
 void heap_op_inline_hook();
 void init_heap_asan();
 
@@ -56,6 +56,27 @@ int my_LoadSymbolMap()
     return 0;
 }
 
+
+int my_assert_fail()
+{
+    printf("my_assert_fail\n");
+    exit(1);
+    return 0;
+}
+
+int my_cxa_throw()
+{
+    printf("my_cxa_throw\n");
+    exit(1);
+    return 0;
+}
+
+int my_nop()
+{
+    printf("my_nop\n");
+    return 0;
+}
+
 void my_init(void)
 {
     void *handle;
@@ -67,14 +88,18 @@ void my_init(void)
     }
 
 
-    init_heap_asan();
-    // heap_op_plt_hook("libreaderex_x64.so");
-    heap_op_inline_hook();
+    // init_heap_asan();
+    // // heap_op_plt_hook("libreaderex_x64.so");
+    // heap_op_inline_hook();
 
     struct link_map *lm = (struct link_map *)handle;
-    printf("%lx\n", lm->l_addr);
+    printf("\nimage base:0x%lx\n", lm->l_addr);
 
-    unsigned long image_base = lm->l_addr;
+    char* image_base = (char*)lm->l_addr;
+
+    printf("export AFL_CODE_START=%p\n", image_base + 0x3D4880);
+    printf("export AFL_CODE_END=%p\n", image_base + 0x90984F);
+
 
     p_CAJFILE_OpenEx1 = dlsym(handle, "CAJFILE_OpenEx1");
     p_CAJFILE_CreateErrorObject = dlsym(handle, "CAJFILE_CreateErrorObject");
@@ -90,6 +115,17 @@ void my_init(void)
         return;
     }
 
+
+    plt_hook_function("libreaderex_x64.so", "__assert_fail", my_assert_fail);
+    plt_hook_function("libreaderex_x64.so", "__cxa_throw", my_cxa_throw);
+    plt_hook_function("libreaderex_x64.so", "__cxa_rethrow", my_cxa_throw);
+
+    
+    
+    plt_hook_function("libreaderex_x64.so", "_Z15getGlobalParamsv", my_nop);
+    plt_hook_function("libreaderex_x64.so", "_ZN12GlobalParams16cleanupFontCacheEPv", my_nop);
+
+
     printf("p_CAJFILE_OpenEx1:%p\n", p_CAJFILE_OpenEx1);
 }
 
@@ -97,6 +133,8 @@ int main(int argc, char **argv)
 {
     char buf[0x2D8];
     printf("main:%p\n", main);
+
+    printf("export AFL_ENTRYPOINT=%p\n", main);
 
     memset(buf, 0, 0x2D8);
     *(unsigned int *)buf = 0x2D8;
