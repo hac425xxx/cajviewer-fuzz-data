@@ -2,9 +2,10 @@
 //--- 010 Editor v6.0.2 Binary Template
 //
 // File:
-// Author:
+// Author: hac425
 // Revision:
-// Purpose:
+// Purpose: analyse cajviewer's HN file
+// reference: https://bbs.pediy.com/thread-257797.htm
 //--------------------------------------
 
 
@@ -116,9 +117,14 @@ typedef struct _PAGE_INFO_ITEM{
     }
 
     FSeek(backup_offset);  // move back
-}PAGE_INFO_ITEM;
+}PAGE_INFO_ITEM <read=read_page_info,name="page">;
 
 
+string read_page_info(local PAGE_INFO_ITEM &c) {
+    local string s;
+    SPrintf(s, "[Page] Id:%d", c.field_A);
+    return s;
+}
 
 
 HN_FILE_HEADER hn_header;
