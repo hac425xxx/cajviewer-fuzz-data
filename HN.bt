@@ -1,0 +1,161 @@
+//--------------------------------------
+//--- 010 Editor v6.0.2 Binary Template
+//
+// File:
+// Author:
+// Revision:
+// Purpose:
+//--------------------------------------
+
+
+typedef struct{
+    ubyte data[0x88];
+}HN_FILE_HEADER;
+
+
+typedef struct{
+    uint32 field_0;
+    uint32 field_4;
+    uint32 page_count;
+    uint32 field_0xc;
+}BUFFER_0X10;
+
+typedef struct{
+    ubyte gap[12];
+    uint16 w1;
+    uint16 w2;
+    uint32 unknown_dword;
+    uint32 dword_20;
+    ubyte data[40];
+}BUFFER_0X40;
+
+
+typedef struct{
+    ubyte data[0x80];
+    uint32 count;
+}BUFFER_0X84;
+
+
+typedef struct{
+    uint16 flag;
+    uint16 page_heigh;
+    uint16 flag2;
+    uint16 page_width;
+
+    //ubyte data[8];
+}PAGE_CONENT_HEADER;
+
+
+typedef struct{
+    uint32 type;
+    uint32 file_offset;
+    uint32 size;
+
+    local uint64 backup_offset = FTell(); 
+
+    FSeek(file_offset);  // move to data offset
+    ubyte pic_data[size];   // page_data
+    FSeek(backup_offset);  // move back
+}PICINFO <read=read_pic_info>;
+
+
+string read_pic_info(local PICINFO &c) {
+    local string s;
+    SPrintf(s, "[Image] type:%d, offset:0x%X, size:0x%X", c.type, c.file_offset, c.size);
+    return s;
+}
+
+
+typedef struct (uint32 size){
+    PAGE_CONENT_HEADER page_hdr;
+
+
+    local char tmp[12];
+    ReadBytes(tmp, FTell(), 12);
+
+    if(Memcmp(tmp, "COMPRESSTEXT", 12) == 0)
+    {
+        char compress_sig[12];
+        uint32 decompressed_size;
+        char compressed_data[size - 12 - 4 - sizeof(PAGE_CONENT_HEADER)];
+    }
+    else
+    {
+        ubyte page_text_content[size - sizeof(PAGE_CONENT_HEADER)];   // page_data
+    }
+    
+}PAGE_CONTENT;
+
+
+local uint32 item_size = 12;
+
+typedef struct _PAGE_INFO_ITEM{
+    uint32 file_offset;
+    uint32 size;
+    uint16 pic_count;
+    uint16 field_A;
+  
+    if(item_size==20)
+    {
+        uint64 field_C;
+    }
+
+    local uint64 backup_offset = FTell(); 
+    
+    FSeek(file_offset);  // move to data offset
+    
+
+    PAGE_CONTENT page_content(size);
+    
+    local uint32 i = 0;
+
+    while(i < pic_count)
+    {
+        PICINFO pic_info;
+        i++;
+    }
+
+    FSeek(backup_offset);  // move back
+}PAGE_INFO_ITEM;
+
+
+
+
+HN_FILE_HEADER hn_header;
+BUFFER_0X10 buffer_0x10;
+BUFFER_0X40 buffer_0x40;
+
+local uint64 page_info_offset = FTell();
+
+if(buffer_0x10.field_0 > 0x18F)
+{
+    BUFFER_0X84 buffer_0x84;
+    local uint64 cur_pos = FTell();    
+    Printf("current pos:0x%x\n", cur_pos);
+    page_info_offset = 308 * buffer_0x84.count + cur_pos;
+}
+
+
+if(buffer_0x10.field_0 <= 0xC7)
+{
+    item_size = 12;
+}
+else
+{
+    item_size = 20;
+}
+
+
+local uint32 i = 0;
+
+
+FSeek(page_info_offset);
+
+while(i < buffer_0x10.page_count)
+{
+    PAGE_INFO_ITEM page;
+    i++;
+}
+
+
+
